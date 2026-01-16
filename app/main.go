@@ -12,6 +12,6 @@ func main() {
 		fmt.Fprintf(w, "Hello K8s! Response from Pod: %s\n", hostname)
 	})
 
-	fmt.Println("Server starting on port 8080...!")
+	fmt.Println("Server starting on port 8080...")
 	http.ListenAndServer(":8080", nil)
 }
