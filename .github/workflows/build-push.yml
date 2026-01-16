@@ -7,7 +7,7 @@ on:
       - 'app/**'                          # app 폴더가 바뀔 때만 실행
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ bhsong/k8s-ansible-lab }}    # repo 이름
+  IMAGE_NAME: ${{ github.repository }}    # repo 이름
 
 jobs:
   build-and-push:
