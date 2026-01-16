@@ -1,0 +1,32 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'app/**'                          # app 폴더가 바뀔 때만 실행
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ bhsong/k8s-ansible-lab }}    # repo 이름
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write                     # 패키지 저장소 쓰기 권한 필요
+
+    steps:
+      - name: Checkout repository
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./app
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 
