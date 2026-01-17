@@ -19,11 +19,11 @@ func main() {
 	var err error
 
 	for i := 0; i < 10; i++ {
-		db, err = sql.Open("postres", connStr)
-		if err = nil {
+		db, err = sql.Open("postgres", connStr)
+		if err == nil {
 			err = db.Ping()
 		}
-		if err = nil {
+		if err == nil {
 			fmt.Println("DB connected!")
 			break
 		}
