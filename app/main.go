@@ -47,6 +47,6 @@ func main() {
 		fmt.Fprintf(w, "[%s] Hello K8s! Total Visitors: %d\n", hostname, count)
 	})
 
-	fmt.Println("Server starting on port 8080...")
+	fmt.Println("Server starting on port 8080...!")
 	http.ListenAndServe(":8080", nil)
 }
