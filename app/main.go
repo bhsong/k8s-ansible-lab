@@ -39,6 +39,10 @@ func main() {
 	hostname, _ := os.Hostname()
 	
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/favicon.ico" {
+			return
+		}
+
 		db.Exec("INSERT INTO visits (visited_at) VALUES ($1)", time.Now())
 
 		var count int
