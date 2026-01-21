@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-web-app
+spec:
+  replicas: 2  # 파드(서버)를 2개 띄워서 부하 분산
+  selector:
+    matchLabels:
+      app: go-web
+  template:
+    metadata:
+      labels:
+        app: go-web
+    spec:
+      containers:
+      - name: go-app
+        image: ghcr.io/bhsong/k8s-ansible-lab:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: postgres-service
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: dbname 
+        - name: PGSSLMODE
+          value: disable
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-web-service
+spec:
+  selector:
+    app: go-web
+  ports:
+    - port: 80       # 서비스 포트 (내부용)
+      targetPort: 8080 # 컨테이너 포트
+      nodePort: 30080 # Raspberry Pi's port
+  type: NodePort

@@ -1,0 +1,85 @@
+- name: Build Full K3s Stack with SSL
+  hosts: pis
+  become: yes         # sudo 권한으로 실행
+
+  tasks:
+    # 1. K3s install
+    - name: Download and Install K3s
+      shell: curl -sfL https://get.k3s.io | sh -
+      args:
+        creates: /usr/local/bin/k3s # 이 파일이 있으면 실행하지 마라 (멱등성)
+    
+    # 2. K3s가 켜질 때까지 잠시 대기
+    - name: Wait for K3s API server
+      wait_for:
+        port: 6443
+        delay: 5
+        timeout: 300
+    
+    # 3. Kubectl 권한 설정 (chmod 644)
+    # 이걸 해줘야 'sudo' 없이 kubectl 가능
+    - name: Fix K3s config permissions
+      file:
+        path: /etc/rancher/k3s/k3s.yaml
+        mode: '0644'
+
+    # 4. SSL 인증서 자동 생성 (OpenSSL)
+    - name: Create directory for certs
+      file:
+        path: /home/bhsong/k8s-ansible-lab/certs
+        state: directory
+
+    - name: Generate self-signed SSL Certificate
+      command: >
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048
+        -keyout /home/bhsong/k8s-ansible-lab/certs/tls.key
+        -out /home/bhsong/k8s-ansible-lab/certs/tls.crt
+        -subj "/CN=mypi.com"
+      args:
+        creates: /home/bhsong/k8s-ansible-lab/certs/tls.crt
+
+    # 5. Secret 등록 (인증서)
+    - name: Create TLS Secret in Kubernetes
+      # --dry-run과 | kubectl apply -f - 조합은 '이미 있어도 에러 안 나게' 함
+      shell: >
+        kubectl create secret tls k8s-lab-tls
+        --key /home/bhsong/k8s-ansible-lab/certs/tls.key
+        --cert /home/bhsong/k8s-ansible-lab/certs/tls.crt
+        --dry-run=client -o yaml | kubectl apply -f -
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    # kubectl apply
+    #- name: Apply Kubenetes Deployment
+    #  command: kubectl apply -f /home/bhsong/k8s-ansible-lab/k8s/deployment.yaml
+    #  environment:
+    #    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+   
+    # 6. Deploy PVC (storage)
+    - name: Deploy PVC (Storage)
+      command: kubectl apply -f /home/bhsong/k8s-ansible-lab/k8s/pvc.yaml
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    # 7. DB Deploy
+    - name: Deploy PostgreSQL DB
+      command: kubectl apply -f /home/bhsong/k8s-ansible-lab/k8s/postgres.yaml
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    
+    # 8. Wait for DB
+    - name: Wait for DB initialization
+      pause:
+        seconds: 15
+
+    # 9. Deploy Go Web App 
+    - name: Apply Go App Manifest
+      command: kubectl apply -f /home/bhsong/k8s-ansible-lab/k8s/deployment.yaml
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+
+    # 10. Deploy Ingress
+    - name: Deploy Ingress (Domain & SSL)
+      command: kubectl apply -f /home/bhsong/k8s-ansible-lab/k8s/ingress.yaml
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml

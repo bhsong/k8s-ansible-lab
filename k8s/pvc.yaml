@@ -1,0 +1,11 @@
+# PVC: 데이터 영구 저장소 요청
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi    # 1GB 용량

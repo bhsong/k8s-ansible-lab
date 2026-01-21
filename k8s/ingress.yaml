@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: go-web-ingress
+spec:
+  tls:
+  - hosts:
+    - mypi.com
+    secretName: k8s-lab-tls
+  rules:
+  - host: mypi.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: go-web-service    # 연결할 서비스 이름
+            port:
+              number: 80              # 서비스 포트 번호
