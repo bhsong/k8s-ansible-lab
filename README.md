@@ -65,8 +65,11 @@ Add the domain to your local hosts file (/etc/hosts or C:\Windows\System32\drive
 [Raspberry_Pi_IP]  k8s-lab.com
 ```
 
+⚠️Important: Before running the Ansible playbook, please verify k8s/postgres.yaml 
+and update the password field with your own secure password.
+
 Access via browser:
-- https://www.google.com/search?q=https://k8s-lab.com
+- https://k8s-lab.com
 
 ## 📝 License
 This project is licensed under the MIT License.
